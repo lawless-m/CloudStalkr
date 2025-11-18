@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLOUDSKANR // TACTICAL CONTROL</title>
+    <style>
+        :root {
+            --dark-base: #0a0e14;
+            --dark-surface: #14181f;
+            --dark-elevated: #1c2128;
+            --radar-green: #00ff41;
+            --amber-alert: #ffb000;
+            --red-critical: #ff3366;
+            --blue-info: #00d4ff;
+            --text-primary: #e6e8eb;
+            --text-dim: #7a8599;
+            --border: #2a3140;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', 'Consolas', monospace;
+            background: var(--dark-base);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Scanline effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 65, 0.03) 0px,
+                transparent 1px,
+                transparent 2px,
+                rgba(0, 255, 65, 0.03) 3px
+            );
+            pointer-events: none;
+            z-index: 1000;
+            animation: scanline 8s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+
+        .header {
+            background: var(--dark-elevated);
+            border-bottom: 2px solid var(--radar-green);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            letter-spacing: 0.3rem;
+            color: var(--radar-green);
+            text-shadow: 0 0 10px var(--radar-green);
+            font-weight: bold;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--radar-green);
+            animation: pulse 2s ease-in-out infinite;
+            box-shadow: 0 0 10px var(--radar-green);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .panel {
+            background: var(--dark-surface);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--radar-green);
+            padding: 1.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .panel:hover {
+            border-left-color: var(--amber-alert);
+            box-shadow: 0 4px 20px rgba(0, 255, 65, 0.1);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            letter-spacing: 0.1rem;
+            color: var(--radar-green);
+            text-transform: uppercase;
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid var(--radar-green);
+            color: var(--radar-green);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            letter-spacing: 0.05rem;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            background: var(--radar-green);
+            color: var(--dark-base);
+            box-shadow: 0 0 15px var(--radar-green);
+        }
+
+        .btn-danger {
+            border-color: var(--red-critical);
+            color: var(--red-critical);
+        }
+
+        .btn-danger:hover {
+            background: var(--red-critical);
+            color: var(--dark-base);
+            box-shadow: 0 0 15px var(--red-critical);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 0.75rem;
+            background: var(--dark-elevated);
+            color: var(--amber-alert);
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.05rem;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:hover {
+            background: var(--dark-elevated);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .badge-active {
+            background: var(--radar-green);
+            color: var(--dark-base);
+        }
+
+        .badge-inactive {
+            background: var(--text-dim);
+            color: var(--dark-base);
+        }
+
+        .badge-priority {
+            background: var(--amber-alert);
+            color: var(--dark-base);
+        }
+
+        .sighting-item {
+            background: var(--dark-elevated);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid var(--blue-info);
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 1rem;
+            align-items: center;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .sighting-notified {
+            border-left-color: var(--amber-alert);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05rem;
+        }
+
+        input, select {
+            width: 100%;
+            background: var(--dark-base);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.75rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--radar-green);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 14, 20, 0.95);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--dark-surface);
+            border: 2px solid var(--radar-green);
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--red-critical);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            line-height: 1;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--dark-elevated);
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--blue-info);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            color: var(--radar-green);
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--radar-green);
+        }
+
+        .stat-label {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1rem;
+            margin-top: 0.5rem;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .timestamp {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+        }
+
+        .coordinate {
+            font-family: 'Courier New', monospace;
+            color: var(--blue-info);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>◢ CLOUDSKANR ◣</h1>
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span id="statusText">SYSTEM ACTIVE</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="regionCount">0</div>
+                <div class="stat-label">Active Regions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="ruleCount">0</div>
+                <div class="stat-label">Alert Rules</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="sightingCount">0</div>
+                <div class="stat-label">Recent Sightings</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">⬡ Regions</h2>
+                    <button class="btn" onclick="openRegionModal()">+ Add Region</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Coordinates</th>
+                                <th>Radius</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="regionsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">⬢ Alert Rules</h2>
+                    <button class="btn" onclick="openRuleModal()">+ Add Rule</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Region</th>
+                                <th>Aircraft</th>
+                                <th>Altitude</th>
+                                <th>Distance</th>
+                                <th>Priority</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rulesTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel full-width">
+            <div class="panel-header">
+                <h2 class="panel-title">⬡ Recent Sightings</h2>
+                <button class="btn" onclick="loadSightings()">↻ Refresh</button>
+            </div>
+            <div id="sightingsContainer"></div>
+        </div>
+    </div>
+
+    <!-- Region Modal -->
+    <div id="regionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="panel-title">Add Region</h2>
+                <button class="close-modal" onclick="closeRegionModal()">×</button>
+            </div>
+            <form id="regionForm" onsubmit="saveRegion(event)">
+                <div class="form-group">
+                    <label>Region ID</label>
+                    <input type="text" id="regionId" required placeholder="e.g., home">
+                </div>
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="regionName" required placeholder="e.g., Grimsby Home">
+                </div>
+                <div class="form-group">
+                    <label>Latitude</label>
+                    <input type="number" step="any" id="regionLat" required placeholder="53.567">
+                </div>
+                <div class="form-group">
+                    <label>Longitude</label>
+                    <input type="number" step="any" id="regionLon" required placeholder="-0.081">
+                </div>
+                <div class="form-group">
+                    <label>Radius (miles)</label>
+                    <input type="number" step="any" id="regionRadius" required placeholder="5.0">
+                </div>
+                <div class="form-group">
+                    <label>Active</label>
+                    <select id="regionActive">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Save Region</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Rule Modal -->
+    <div id="ruleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="panel-title">Add Alert Rule</h2>
+                <button class="close-modal" onclick="closeRuleModal()">×</button>
+            </div>
+            <form id="ruleForm" onsubmit="saveRule(event)">
+                <div class="form-group">
+                    <label>Region</label>
+                    <select id="ruleRegion" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Aircraft Types</label>
+                    <input type="text" id="ruleTypes" placeholder="H47,CH47 or 'any'" required>
+                    <small style="color: var(--text-dim);">Comma-separated or 'any'</small>
+                </div>
+                <div class="form-group">
+                    <label>Min Altitude (ft)</label>
+                    <input type="number" id="ruleMinAlt" value="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Max Altitude (ft)</label>
+                    <input type="number" id="ruleMaxAlt" value="5000" required>
+                </div>
+                <div class="form-group">
+                    <label>Max Distance (miles)</label>
+                    <input type="number" step="any" id="ruleMaxDist" value="2.0" required>
+                </div>
+                <div class="form-group">
+                    <label>Priority (1-5)</label>
+                    <input type="number" min="1" max="5" id="rulePriority" value="3" required>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Save Rule</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

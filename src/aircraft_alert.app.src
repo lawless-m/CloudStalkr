@@ -2,7 +2,7 @@
  [{description, "Real-time military aircraft alert system"},
   {vsn, "1.0.0"},
   {registered, [aircraft_alert_sup, config_server, aircraft_poller,
-                alert_processor, notification_sender]},
+                alert_processor, notification_sender, web_server]},
   {mod, {aircraft_alert_app, []}},
   {applications,
    [kernel,
@@ -12,7 +12,10 @@
     inets,
     ssl,
     jsx,
-    gun
+    gun,
+    cowboy,
+    cowlib,
+    ranch
    ]},
   {env,[]},
   {modules, []},
