@@ -1,0 +1,22 @@
+{application, aircraft_alert,
+ [{description, "Real-time military aircraft alert system"},
+  {vsn, "1.0.0"},
+  {registered, [aircraft_alert_sup, config_server, aircraft_poller,
+                alert_processor, notification_sender]},
+  {mod, {aircraft_alert_app, []}},
+  {applications,
+   [kernel,
+    stdlib,
+    sasl,
+    mnesia,
+    inets,
+    ssl,
+    jsx,
+    gun
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {licenses, ["Apache 2.0"]},
+  {links, []}
+ ]}.
