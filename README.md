@@ -5,6 +5,7 @@ CloudSkanr is an Erlang/OTP application that monitors ADS-B Exchange for militar
 ## Features
 
 - **Real-time monitoring** of ADS-B Exchange data
+- **Web-based configurator** - tactical control center interface for managing regions and rules
 - **Configurable regions** - monitor multiple locations (home, holiday, etc.)
 - **Smart alert rules** - filter by aircraft type, altitude, distance
 - **Duplicate suppression** - avoid spam from the same aircraft
@@ -12,6 +13,7 @@ CloudSkanr is an Erlang/OTP application that monitors ADS-B Exchange for militar
 - **Approaching/departing detection** - know if aircraft is coming or going
 - **Priority levels** - different notification urgency based on rules
 - **ntfy.sh integration** - get push notifications on your phone
+- **Live sightings dashboard** - see recent aircraft detections in real-time
 
 ## Requirements
 
@@ -119,6 +121,51 @@ rebar3 shell
 rebar3 release
 _build/default/rel/aircraft_alert/bin/aircraft_alert start
 ```
+
+Once started, the web interface will be available at **http://localhost:8080**
+
+## Web Interface
+
+CloudSkanr includes a tactical control center-style web interface for managing your aircraft tracking system.
+
+### Features
+
+- **Real-time Dashboard** - Monitor system status and recent sightings
+- **Region Management** - Add, edit, and activate/deactivate monitoring regions
+- **Alert Rules** - Configure what triggers notifications
+- **Live Sightings** - View recent aircraft detections with automatic updates
+- **System Statistics** - Track active regions, rules, and sighting counts
+
+### Interface Design
+
+The web interface features a distinctive **aviation/tactical control center aesthetic**:
+- Dark theme with radar green accents (#00ff41)
+- Monospace typography for that technical, military feel
+- CRT scanline effects for authenticity
+- Grid-based tactical layout
+- Real-time updates with purposeful animations
+
+### Usage
+
+1. **Access the interface**: Open http://localhost:8080 in your browser
+2. **Add regions**: Click "+ Add Region" to define new monitoring areas
+3. **Configure alerts**: Click "+ Add Rule" to set up notification triggers
+4. **Monitor sightings**: Recent aircraft detections appear automatically
+5. **Auto-refresh**: Dashboard updates every 10 seconds
+
+### API Endpoints
+
+The web interface is built on a RESTful API:
+
+- `GET /api/regions` - List all regions
+- `POST /api/regions` - Create new region
+- `DELETE /api/regions/:id` - Delete region
+- `GET /api/rules` - List all alert rules
+- `POST /api/rules` - Create new rule
+- `DELETE /api/rules/:id` - Delete rule
+- `GET /api/sightings` - Get recent sightings
+- `GET /api/config` - Get system configuration
+- `GET /api/status` - Get system status
 
 ## Usage
 

@@ -51,6 +51,15 @@ init([]) ->
         modules => [notification_sender]
     },
 
-    Children = [ConfigServer, AircraftPoller, AlertProcessor, NotificationSender],
+    WebServer = #{
+        id => web_server,
+        start => {web_server, start_link, []},
+        restart => permanent,
+        shutdown => 5000,
+        type => worker,
+        modules => [web_server]
+    },
+
+    Children = [ConfigServer, AircraftPoller, AlertProcessor, NotificationSender, WebServer],
 
     {ok, {SupFlags, Children}}.
